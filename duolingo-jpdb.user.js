@@ -1,14 +1,25 @@
+// ==UserScript==
+// @name         JPDB + Duolingo
+// @namespace    http://tampermonkey.net/
+// @version      2025-06-14
+// @description  i need better prioritization in life...
+// @author       moi :3
+// @match        https://jpdb.io/review*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=jpdb.io
+// @grant        none
+// ==/UserScript==
+
 let style1 = document.querySelector('[href="/static/be945648d268.css"]').sheet;
 
 /* List of rules */
 const rules = [
   `#grade-1, #grade-2, #grade-3, #grade-4, #grade-5 {
-    color: #ffffff; 
-    transition: all 250ms ease-out; 
+    color: #ffffff;
+    transition: all 250ms ease-out;
     text-decoration: none;
   }`,
   `#grade-1 {
-    border-bottom: 5px solid #ea2b2b; 
+    border-bottom: 5px solid #ea2b2b;
     background-color: #ff4b4b;
   }`,
   `#grade-2 {
@@ -28,7 +39,7 @@ const rules = [
     background-color: #1cb0f6;
   }`,
   `#grade-1:hover, #grade-2:hover, #grade-3:hover, #grade-4:hover, #grade-5:hover {
-    box-shadow: none; 
+    box-shadow: none;
     text-decoration: none;
   }`,
   `#grade-1:hover {
@@ -38,71 +49,73 @@ const rules = [
     background-color: #f5a4a4;
   }`,
   `#grade-3:hover {
-    background-color: #ffc800; 
+    background-color: #ffc800;
   }`,
   `#grade-4:hover {
-    background-color: #61e002; 
+    background-color: #61e002;
   }`,
   `#grade-5:hover {
-    background-color: #84d8ff; 
+    background-color: #84d8ff;
   }`,
   `pop-up {
-    display: block;
+    display: flex;
     padding: 20px 40px 20px 40px;
-    width: 150px;
+    width: 300px;
     border-radius: 16px;
     font-size: 24px;
     position: fixed;
     left: 50%;
     top: 10%;
-    color: #ffffff;
+    color: #000000;
+    font-weight: bold;
+    justify-content: center;
     animation-name: popup_fadein;
-    animation-duration: 900ms;
+    animation-duration: 1s;
     animation-fill-mode: forwards;
   }`,
-  `@keyframes popup_fadein {{
-    0% {{
+  `@keyframes popup_fadein {
+    0% {
       opacity: 0;
       transform: scale(0.7) translateX(-50%) translateY(-5%);
-    }} 
+    }
 
-    10% {{
+    10% {
       opacity: 1;
       transform: scale(1)  translateX(-50%) translateY(0%);
-    }}
+    }
 
-    30% {{
+    30% {
       opacity: 1;
       transform: scale(0.95)  translateX(-50%) translateY(0%);
-    }}
+    }
 
-    60% {{
+    60% {
       opacity: 1;
       transform: scale(0.95)  translateX(-50%) translateY(0%);
-    }}
+    }
 
-    100% {{
+    100% {
       opacity: 0;
       transform: scale(0.95) translateX(-50%) translateY(0%);
-    }}
-  }}
+    }
+  }
   `,
-  `.cardfinish1 {{
+  `.cardfinish1, .cardfinish2 {
     border-bottom: 5px solid #ea2b2b;
     background-color: #ff4b4b;
-  }}`,
-  `.cardfinish2 {{
+  }`,
+  `.cardfinish3 {
     border-bottom: 5px solid #ff9600;
     background-color: #ffb100;
-  }}`,
-  `.cardfinish3 {{
+  }`,
+  `.cardfinish4 {
     background-color: #58cc02;
     border-bottom: 8px solid #58a700;
-  }}`,
-  `.cardfinish4 {{
+  }`,
+  `.cardfinish5 {
     border-bottom: 5px solid #1899d6;
     background-color: #1cb0f6;
-  }}`,
+  }`,
 ];
 
 rules.forEach((rule) => {
@@ -112,6 +125,7 @@ rules.forEach((rule) => {
 console.log(style1.cssRules.length);
 
 let grade = [null,]
+let response = [null, ]
 
 const isGradingLoaded = setInterval(() => {
   for (let i = 1; i <= 5; i++) {
@@ -119,21 +133,23 @@ const isGradingLoaded = setInterval(() => {
   }
   if (grade[1] && grade[2] && grade[3] && grade[4] && grade[5]) {
     console.log("All grading buttons loaded!");
-    grade[1].addEventListener("click", nothing);
+    for (let i = 1; i <= 5; i++) {
+      grade[i].addEventListener("click", response[i] = (e) => {e.preventDefault(); popup(i)});
+    }
     clearInterval(isGradingLoaded);
   }
 }, 1);
 
-function nothing(e) {
-  e.preventDefault();
-  /* Custom code here */
-  let popup = `
-  <pop-up class="cardfinish1">
-    Next time!
+const messages = [null, "Next time!", "Almost!", "Tough one!", "Nice :)", "Wow!"];
+
+function popup(i) {
+  let msg = `
+  <pop-up class="cardfinish${i}">
+    ${messages[i]}
   </pop-up>`
-  document.querySelector("body").insertAdjacentHTML("beforeend", popup);
+  document.querySelector("body").insertAdjacentHTML("beforeend", msg);
   setTimeout(() => {
-    grade[1].removeEventListener("click", nothing);
-    grade[1].click();
-  }, 1000);
+    grade[i].removeEventListener("click", response[i]);
+    grade[i].click();
+  }, 1100);
 }
