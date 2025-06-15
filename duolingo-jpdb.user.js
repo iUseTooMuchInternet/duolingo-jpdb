@@ -131,6 +131,7 @@ function nothing(e) {
   <pop-up class="cardfinish1">
     Next time!
   </pop-up>`
+  document.querySelector("body").insertAdjacentHTML("beforeend", popup);
   setTimeout(() => {
     grade[1].removeEventListener("click", nothing);
     grade[1].click();
