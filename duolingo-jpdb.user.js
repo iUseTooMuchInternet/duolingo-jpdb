@@ -54,14 +54,16 @@ rules.forEach((rule) => {
 
 console.log(style1.cssRules.length);
 
-let grade1;
-let popup;
-const myInterval = setInterval(() => {
-  grade1 = document.getElementById("grade-1");
-  if (grade1) {
-    console.log("nothing button loaded");
-    grade1.addEventListener("click", nothing);
-    clearInterval(myInterval);
+let grade = [null,]
+
+const isGradingLoaded = setInterval(() => {
+  for (let i = 1; i <= 5; i++) {
+    grade[i] = document.getElementById(`grade-${i}`);
+  }
+  if (grade[1] && grade[2] && grade[3] && grade[4] && grade[5]) {
+    console.log("All grading buttons loaded!");
+    grade[1].addEventListener("click", nothing);
+    clearInterval(isGradingLoaded);
   }
 }, 1);
 
