@@ -2,17 +2,22 @@
 // @name         JPDB + Duolingo
 // @namespace    http://tampermonkey.net/
 // @version      2025-06-14
-// @description  i need better prioritization in life...
+// @description  Duolingo-ify JPDB review sessions
 // @author       moi :3
-// @match        https://jpdb.io/review*
+// @match        https://jpdb.io/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=jpdb.io
 // @grant        none
 // ==/UserScript==
 
-/* CURRENT PROBLEM: Add the other scripts which require other domains too. */
-/* START HERE */
+/* FOR DEBUGGING PURPOSES */
 const scriptName = "[JPDB + Duolingo] ";
+function checkIfClicked(event) {
+        if (event.type == "click") {
+                console.log("clicked!");
+        }
+}
 
+/* START HERE */
 const audioSources = {
         get finish() {
                 let content;
@@ -92,6 +97,47 @@ const finishFeedback = {
         }
 }
 
+async function fetch_finish_page(form) {
+        let formData = new URLSearchParams(new FormData(form)); // https://stackoverflow.com/a/46642899
+        let finishPage = await fetch("https://jpdb.io/review#a", {
+                method: "POST",
+                headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: formData
+        })
+        if (finishPage.ok) {
+                return await finishPage.text();
+        } else {
+                throw new Error("Something went wrong.");
+        }
+}
+
+function injectFinishPage(html) {
+        document.write(html);
+        finishFeedback.insert();
+        document.querySelector(
+                "input[value='Yes, keep going!']"
+        ).addEventListener("click", cardsDoneThisSession.reset);
+}
+
+let userClickedButton;
+let finishPage;
+
+async function checkIfFinished(event) {
+        if (cardsDoneThisSession.count == localStorage.getItem("cardsPerSession")) {
+                finishPage = await fetch_finish_page(event.target.parentNode);
+                setTimeout(() => {
+                        injectFinishPage(finishPage);
+                }, 1100)
+        } else {
+                userClickedButton = event.target.id;
+                setTimeout(() => {
+                        document.getElementById(userClickedButton).click();
+                }, 1100)
+        }
+}
+
 /* POP-UPS AFTER ANSWERING */
 class AnswerPopup {
         constructor(grade) {
@@ -120,18 +166,38 @@ class AnswerPopup {
                 event.preventDefault();
                 this.insert();
                 progressBar.update();
-                document.querySelector("pop-up").addEventListener("animationend", () => {
-                        document.getElementById("grade-"+this.grade).click();
-                }, 1000) // TODO: this doesnt work for grade-permaknown and grade-blacklist.
         }
 }
 
 function createAnswerPopups() {
         let answerPopups = [null];
-        for (let i = 1; i <= 7; i++) {
+        for (let i = 1; i <= 7; i++) { // Because there are 7 possible grade buttons
                 answerPopups[i] = new AnswerPopup(i);
         }
         return answerPopups;
+}
+
+/* COUNTS NUMBER OF CARDS PER SESSION */
+async function fetch_settings() {
+        let settings = await fetch("https://jpdb.io/settings");
+        if (settings.ok) {
+                settings = new DOMParser().parseFromString(
+                        await settings.text(),
+                        "text/html"
+                );
+        }
+        return settings;
+}
+
+async function fetch_cards_per_session_count() {
+        let settings;
+        if (window.location.href == "https://jpdb.io/settings") {
+                settings = document;
+        } else {
+                settings = await fetch_settings();
+        }
+        let count = settings.getElementById("cards-per-review-session").value;
+        localStorage.setItem("cardsPerSession", count);
 }
 
 /* COUNTS NUMBER OF CARDS DONE THIS SESSION */
@@ -145,11 +211,11 @@ const cardsDoneThisSession = {
         reset: function () {
                 localStorage.setItem("cardsDoneThisSession", 0);
         },
-        watch: function () {
-                if (!this.count || isNaN(this.count) || this.count >= localStorage.getItem("cardsPerSession")) {
+        watch: function (currentPage) {
+                if (!this.count || isNaN(this.count) || this.count >= localStorage.getItem("cardsPerSession") || (this.count !== 0 && currentPage !== "review")) {
                         this.reset();
                         console.log("Cards done this session reset.")
-                } // TODO: reset count if user quit in the middle of a review session too
+                }
                 console.log(scriptName + "%cCards done this session: " + cardsDoneThisSession.count, "display: block; padding: 10px; background-color: salmon; color: white; font-size: 20px;");
         },
         increase: function () {
@@ -211,18 +277,13 @@ let gradeButtons = {
         decorate: function () { 
                 let style = `
 <style id="grade-buttons-stylesheet">
-  #grade-1, #grade-2, #grade-3, #grade-4, #grade-5 {
+  #grade-1, #grade-2, #grade-3, #grade-4, #grade-5, #grade-6, #grade-7 {
     color: #ffffff;
     transition: all 250ms ease-out;
     text-decoration: none;
   }
   
-  #grade-1 {
-    border-bottom: 5px solid #ea2b2b;
-    background-color: #ff4b4b;
-  }
-  
-  #grade-2 {
+  #grade-1, #grade-2, #grade-6 {
     border-bottom: 5px solid #ea2b2b;
     background-color: #ff4b4b;
   }
@@ -237,21 +298,17 @@ let gradeButtons = {
     background-color: #58cc02;
   }
   
-  #grade-5 {
+  #grade-5, #grade-7 {
     border-bottom: 5px solid #1899d6;
     background-color: #1cb0f6;
   }
   
-  #grade-1:hover, #grade-2:hover, #grade-3:hover, #grade-4:hover, #grade-5:hover {
+  #grade-1:hover, #grade-2:hover, #grade-3:hover, #grade-4:hover, #grade-5:hover, #grade-6:hover, #grade-7:hover {
     box-shadow: none;
     text-decoration: none;
   }
   
-  #grade-1:hover {
-    background-color: #f5a4a4;
-  }
-  
-  #grade-2:hover {
+  #grade-1:hover, #grade-2:hover, #grade-6:hover {
     background-color: #f5a4a4;
   }
   
@@ -263,7 +320,7 @@ let gradeButtons = {
     background-color: #61e002;
   }
   
-  #grade-5:hover {
+  #grade-5:hover, #grade-7:hover {
     background-color: #84d8ff;
   }
   
@@ -311,7 +368,7 @@ let gradeButtons = {
     }
   }
   
-  .cardfinish1, .cardfinish2 {
+  .cardfinish1, .cardfinish2, .cardfinish6 {
     border-bottom: 5px solid #ea2b2b;
     background-color: #ff4b4b;
   }
@@ -326,7 +383,7 @@ let gradeButtons = {
     border-bottom: 8px solid #58a700;
   }
   
-  .cardfinish5 {
+  .cardfinish5, .cardfinish7 {
     border-bottom: 5px solid #1899d6;
     background-color: #1cb0f6;
   }
@@ -338,17 +395,45 @@ let gradeButtons = {
                 let buttons = await this.buttons;
                 let answerPopups = createAnswerPopups();
                 buttons.forEach((button, index) => {
-                        button.addEventListener("click", answerPopups[index + 1]);
-                        button.addEventListener("click", cardsDoneThisSession);
+                        if (buttons.length >= 6) {
+                                button.id = `grade-${index + 1}`;
+                                button.addEventListener("click", answerPopups[index + 1], {once: true});
+                        } // TODO: pages that introduce new kanji have different styles and grade id for each buttons. so fix that. also does changing the id change the content of the form sent too...?
+                        button.addEventListener("click", cardsDoneThisSession, {once: true});
+                        button.addEventListener("click", checkIfFinished, {once: true});
+                        button.addEventListener("click", checkIfClicked);
                 })
         }
 };
 
-gradeButtons.decorate();
+/* MODULES: WHAT TO DO DEPENDING ON THE URL */
+const modules = {};
+modules.review = function () {
+        gradeButtons.decorate();
         gradeButtons.addUtils(); // For some reason these events remove themselves after one run even without needing the {once: true} option ??? I'm so confused. I hate my life why did I spend like 10 hours on this shit.
-        cardsDoneThisSession.watch();
+        
         progressBar.insert();
-        if (document.querySelector("h5")) {
-                // Only "Finished!" page has a h5 elem
-                finishFeedback.insert();
+};
+
+modules.settings = function () {
+        // Updates the cards per session count
+        document.getElementById("save-all-settings-box").addEventListener("click", fetch_cards_per_session_count);
+};
+
+modules.default = function (currentPage) {
+        cardsDoneThisSession.watch(currentPage);
+        // Get the number of cards per review session
+        if (!localStorage.getItem("cardsPerSession")) {
+                fetch_cards_per_session_count();
+        }
+        console.log("grahhh")
+};
+
+/* RUN THE CODE DEPENDING ON THE PATH NAME */
+let currentPage = window.location.pathname.slice(1);
+
+modules.default(currentPage);
+
+if (Object.hasOwn(modules, currentPage)) {
+        modules[currentPage]();
 }
