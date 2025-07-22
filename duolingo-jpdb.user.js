@@ -9,12 +9,19 @@
 // @grant        none
 // ==/UserScript==
 
+function attachEventListeners(buttons) {
+    buttons.forEach((button) => {
+        button.addEventListener("click", injectFinishPage);
+    });
+}
+
 let buttons;
 let wait = setInterval(() => {
   buttons = document.querySelector(`input[id|="grade"]`);
   if (buttons) {
     alert("Buttons found");
-    clearInterval(wait)
+    attachEventListeners(buttons);
+    clearInterval(wait);
   }
 }, 100)
 
@@ -81,6 +88,7 @@ async function fetch_finish_page(form) {
 
 async function injectFinishPage() {
         let html = await fetch_finish_page();
+        alert(html);
         document.documentElement.innerHTML = html;
         document.body.appendChild(video);
         document.body.insertAdjacentElement(
