@@ -17,8 +17,8 @@ function checkIfClicked(event) {
 let buttons;
 let wait = setInterval(() => {
         buttons = document.querySelectorAll("input[id|='grade']");
-        if (buttons !== null) {
-                addCustomEventListeners();
+        if (buttons !== null && buttons.length !== 0) {
+addCustomEventListeners();
                 clearInterval(wait);
         }
 }, 1000);
