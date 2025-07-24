@@ -8,9 +8,9 @@ I just need the script to work on my Firefox and my iOS Safari browsers basicall
 ## Oh no, the flashback's starting
 It started like this: After hacking together a script that worked on Firefox (much effort was spent to follow the laws of writing readable code though I don't know how much I succeeded) I tested it on Safari just to see... it didn't work. And the code's so gargantuan that I don't know where to start fixing it. Especially with***out** a debugger (clearly I don't own a Mac).
 
-So I pretty much just... rewrote everything in a separate version for Safari, but I no longer put so much importance on making it fancy and readable (probably the fact that I have to make it fancy to make it readable already means I went wrong somewhere with that whole writing readable code, but that's a lesson for future me). I tried a new approach in which I just fetch api'ed everything, mainly so that I can keep a count in my code and increase it every time a word is graded without resetting it. Makes for a good progress bar. But though it worked relying on Fetch for everything made it *sooooooooo* slow. I mean it took almost 7 seconds to GET or POST something!
+So I pretty much just... rewrote everything in a separate version for Safari, but I no longer put so much importance on making it fancy and readable (probably the fact that I have to make it fancy to make it readable already means I went wrong somewhere with that whole writing readable code, but that's a lesson for future me). I tried a new approach in which I just fetch api'ed everything, mainly so that I can keep a count in my code and increase it every time a word is graded without resetting it. Makes for a good progress bar. But though it worked relying on Fetch for everything made it *sooooooooo* slow*. I mean it took almost 7 seconds to GET or POST something!
 
-I did try to replace Fetch with XHR but it's still so slow. Guess I will just... you guessed it... write it all over again. Aha.
+I did try to replace Fetch with XHR but nothing improved much. Guess I will just... you guessed it... write it all over again. Aha.
 
 ## What I learned
 - Modularizing my code and keeping stuff tiny and cute is important. It'll just make managing stuff just easier.
