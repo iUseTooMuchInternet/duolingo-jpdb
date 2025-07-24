@@ -16,5 +16,6 @@ I did try to replace Fetch with XHR but it's still so slow. Guess I will just...
 - Modularizing my code and keeping stuff tiny and cute is important. It'll just make managing stuff just easier.
 - All the time I spent adding event listeners, preventing default, removing event listeners or setting the {once: true} option could've been saved simply by just knowing form.submit() exists. (Again, the wonder of trial-n-error am I right?)
 - Callbacks that act as event handlers automatically have the event passed to them (no more worrying about whether doSomething(e) counts as a callback), yay!
+- (Debugging on iOS) Use alerts (in the stead of console.log) and try...catch on everything.
 - github dot com is a bitch on mobile (nothing fucking loads!)
 - I have no impulse control and have sunk way too much time on this shit. Time that could've been better spent actually learning Nihongo actually.
